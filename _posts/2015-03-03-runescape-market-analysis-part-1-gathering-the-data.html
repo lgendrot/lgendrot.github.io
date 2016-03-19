@@ -1,0 +1,128 @@
+---
+layout: post
+title: 'Runescape Market Analysis (Part 1): Gathering the Data'
+date: 2015-03-03 13:58:32.000000000 -08:00
+type: post
+published: true
+status: publish
+categories:
+- Code
+tags: []
+meta:
+  _edit_last: '1'
+  _publicize_twitter_user: "@lgendrot"
+  _thumbnail_id: '125'
+  _wpas_done_all: '1'
+  _wpas_mess: 'In which I write bad code to do cool things | Runescape Grand Exchange
+    Analysis (Part 1): Gathering the Data http://wp.me/p5yxJp-1X'
+  dsq_thread_id: '3564748105'
+
+---
+<p>I have a soft spot in my heart for Runescape. I spent a lot of time in my Junior High's computer lab casting steely glances around the room as my friends and I endeavored to play without the teacher seeing what we were up to instead of practicing our touch typing (snore!)</p>
+<p>It was that fuzzy feeling, coupled with my more recent interest in teaching myself Machine Learning and Python that gave me the inspiration to make a <a href="https://twitter.com/RSMarketWatch">market analysis bot</a> for the Runescape Grand Exchange. The bot gathers the day's data, adds it to a 3+ year long dataset scraped from the web, analyzes the last 20 days, and tweets the items that are projected to increase in price some time in the next 20 days.</p>
+<p>I'm not sure if this has been done before. I'm sure it has. But it was certainly a fun learning experience either way.</p>
+<p>Before I begin I want to give a very big shout out to Harrison Kinsley (who has no idea who I am) and his <a href="https://www.youtube.com/user/sentdex/featured" target="_blank">YouTube channel.</a> His video series on pattern analysis with Python make up the bulk of the code for the bot, and although I'm hoping to improve its performance someday, it does not by any means run on an original algorithm. Check out Harrison's videos on pattern recognition for a more in-depth explanation of how this all works.</p>
+<hr />
+<p>Let's start with how I gathered the data.</p>
+<p>There are a number of websites out there that provide historical information on the Grand Exchange. I chose <a href="http://www.grandexchangewatch.com/">Grand Exchange Watch</a>, which provides data in the form of a table with dates, and prices from those dates:</p>
+<p><a href="http://manicfringe.com/wp-content/uploads/2015/03/Screen-Shot-2015-03-02-at-10.54.02-PM.png"><img class="aligncenter wp-image-146 size-full" src="{{ site.baseurl }}/assets/Screen-Shot-2015-03-02-at-10.54.02-PM.png" alt="Screen Shot 2015-03-02 at 10.54.02 PM" width="893" height="387" /></a></p>
+<p>Unfortunately there's no way to export data from Grand Exchange Watch as far as I know, so I had to scrape the data myself using <a href="http://www.crummy.com/software/BeautifulSoup/">BeautifulSoup</a></p>
+<p>I grabbed a list of item IDs from the runescape website, and headed on over to Grand Exchange Watch where I ran into my first problem. Unlike the official Runescape website, Grand Exchange Watch includes both the item name and the item ID in the URL.</p>
+<p><a href="http://manicfringe.com/wp-content/uploads/2015/02/Screen-Shot-2015-02-28-at-9.09.58-PM.png"><img class="aligncenter wp-image-128 size-full" src="{{ site.baseurl }}/assets/Screen-Shot-2015-02-28-at-9.09.58-PM.png" alt="Screen Shot 2015-02-28 at 9.09.58 PM" width="499" height="35" /></a></p>
+<p>If I'm going to programmatically grab all the data I need, I need to be able to arbitrarily go to any item page on this website. But all I have is a list of item IDs, so I wrote a quick function to use <a href="http://docs.python-requests.org/en/latest/">requests</a> and the <a href="http://services.runescape.com/m=rswiki/en/Grand_Exchange_APIs">Runescape API</a> to grab the item names from their ID numbers:</p>
+
+{%highlight python %}
+import json
+import requests
+from bs4 import BeautifulSoup
+import re
+import os
+import time
+import datetime
+
+
+item_ids = ['1944', '556', '314']
+item_names = {}
+
+#the function accepts my list of ID numbers as strings or ints
+def getItemNames(item_numbers):
+    #for every itemID in my list grab the appropriate json from the Runescape API
+    for item_id in item_numbers:
+         item_url = 'http://services.runescape.com/m=itemdb_rs/api/catalogue/detail.json?item='+str(item_id)
+         item_response = requests.get(item_url)
+         item_json = item_response.json()
+ 
+         #stick the item name and id number in a dictionary
+         item_names[str(item_json['item']['id'])] = item_json['item']['name']
+{%endhighlight%}
+<p>So now I have a way to refer to the item's ID and the item's name.</p>
+{%highlight python%}
+url_names = []
+
+getItemNames(item_ids)
+
+for item_id in item_names:
+    url_names.append(item_id+ "-" +item_names[item_id].replace(" ", "-"))
+    #item_id is the ID Number key from our item_names dictionary,
+    #and item_names[item_id] is the name of the item
+{%endhighlight%}
+
+<p>I now have a list of names and IDs to append to my URLs. It's now a matter of grabbing the appropriate dates and prices from the table on each page. Also notice that if I want more than just the most recent 20 days I'm going to have to go through each page of the table, which is just a matter of appending a number to the url. For example page 2 of the table is:</p>
+<p><img class="aligncenter size-full wp-image-152" src="{{ site.baseurl }}/assets/Screen-Shot-2015-03-02-at-11.34.51-PM.png" alt="Screen Shot 2015-03-02 at 11.34.51 PM" width="507" height="29" /></p>
+<p>I use Requests to grab the page's source, and I stuck the next part into two big for loops. I'm not sure if this is the most pythonic way to do what I'm trying to do, but it works for me and that's all I really care about.</p>
+
+{%highlight python %}
+dates = []
+prices = []
+
+pagenums = range(1, 60)
+
+for item_url in url_names:
+    item_id = re.split(r'([0-9]*)', item_url)[1]
+    for pagenum in pagenums:
+        url = "http://www.grandexchangewatch.com/item/" + item_url + "?range=360&amp;start=" + str(pagenum)
+        r = requests.get(url)
+        soup = BeautifulSoup(r.content)
+        cal = soup.find_all("div", {"id": "calendar-container"})
+        #finds the table of data
+
+        tds = cal[0].contents[5].find_all("td")
+        #finds the individual entries in the table, reading from right to left
+
+
+        date_id_1 = [x*6 for x in range(10)]
+        date_id_2 = [x+3 for x in date_id_1]
+        #These weird lists of numbers are the indexes for
+        #the appropriate entries in the table (Date, Price)
+        price_id_1 = [1+(x*6) for x in range(10)]
+        price_id_2 = [x+3 for x in price_id_1]
+
+        for i in date_id_1:
+            dates.append(tds[i].text)
+        for y in date_id_2:
+            dates.append(tds[y].text)
+
+        for i in price_id_1:
+            prices.append(tds[i].text.replace(",",'').replace("gp",""))
+        for y in price_id_2:
+            prices.append(tds[i].text.replace(",",'').replace("gp",""))
+
+        dates.reverse()
+        prices.reverse()
+        #Want the lists so they are from oldest to newest
+
+    f = open(item_names[item_id]+'.csv', 'a+')
+    for date in dates:
+        ind = dates.index(date)
+        entry = str(time.mktime(time.strptime(date, "%B %d, %Y"))) + "," + prices[ind] + "\n"
+        #make the string formatted date into a unix timestamp
+        f.write(entry)
+    f.close()
+    #Saving a csv file of what we've gathered
+
+    dates[:] = []
+    prices[:] = []
+    #Clearing the date and price lists for the next item in our item_id list
+{%endhighlight%}
+
+<p>And there we have it. This will grab 60 pages of table data for a list of items, which is a little over 3 years of prices, every day, for each item. In Part 2 I'll go over how I analyze this historical data.</p>

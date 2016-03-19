@@ -1,0 +1,152 @@
+---
+layout: post
+title: 'Weekend Project: Reddit AMA Bot'
+date: 2015-09-26 15:24:09.000000000 -07:00
+type: post
+published: true
+status: publish
+categories:
+- Code
+tags: []
+meta:
+  _edit_last: '1'
+  _publicize_twitter_user: "@lgendrot"
+  _thumbnail_id: '217'
+  _wpas_done_all: '1'
+  _wpas_skip_9839229: '1'
+  _wpas_skip_9839241: '1'
+  dsq_thread_id: '4169114642'
+---
+<h4 style="text-align: center;"><em>Pictured above: The Inspiration</em></h4>
+<h2 style="text-align: center;">The Inspiration</h2>
+<p>Reddit user <a href="http://reddit.com/u/Insanimate" target="_blank">/u/Insanimate</a> made this hotsauce packet painting and posted it on <a href="http://reddit.com/r/pics" target="_blank">/r/pics</a>. The president of TacoBell-or whoever runs their social media accounts-then showed up in the post and asked how they could buy one.</p>
+<p><img class="aligncenter  wp-image-215" src="{{ site.baseurl }}/assets/Screen-Shot-2015-09-26-at-3.32.42-PM-e1443306853325.png" alt="Screen Shot 2015-09-26 at 3.32.42 PM" width="749" height="386" /></p>
+<p>Nobody noticed. The painting was posted over a year ago, yet the president's comment went unrecognized and unseen at only 13 points before it wound up on /r/bestof last week.</p>
+<p>This is a scenario I've seen play out all over reddit whenever a 'celebrity' reddit user makes a comment. Nobody knows, or is skeptical about the veracity of a user's identity.</p>
+<p>So to help ameliorate this problem I made a reddit bot that searches through a user's history, and returns a table of the user's AMA posts. If there are no such posts, then nothing happens.</p>
+<h2 style="text-align: center;">The Code</h2>
+<pre data-language="python">
+{%highlight python%}
+import praw
+import re
+import OAuth2Util
+import pymongo
+import datetime
+import time
+
+user_agent = 'AMA identifier: v0.2 (by /u/Molag_balls)'
+r = praw.Reddit(user_agent)
+o = OAuth2Util.OAuth2Util(r, configfile="oauthconfig.ini")
+o.refresh(force=True)
+
+#Connect to mongodb
+try:
+    conn = pymongo.MongoClient()
+    print "Connected successfully!"
+except pymongo.errors.ConnectionFailure, e:
+    print "Could not connect to MongoDB: %s" % e
+
+db = conn.IdentityBot
+collection = db.CommentIDs
+
+
+def in_database(comment_id): #Is the entry in the database already?
+    if collection.find({"comment_id": comment_id}).count() &gt; 0:
+        return True
+    else:
+        return False
+
+def already_done_to_db(already_done):
+    for id in already_done:
+        collection.update_one(
+            {"comment_id": id},
+            {
+                 "$set": 
+                     {
+                         "collected_at": datetime.datetime.now().strftime("%s") 
+                     }
+            },
+            upsert=True
+        )
+
+
+#Loop 'forever'
+while True:
+
+    #Get all comments in subreddit(s) of interest
+    print "Getting comments..."
+    all_comments = r.get_comments('bottesting', limit=None)
+    already_done = []
+
+    print "Searching through comments..."
+    #Look through every comment
+    for comment in all_comments:
+    #If the comment starts with "!identify, and it's not in the database already"
+        if comment.body.lower().startswith('!identify') and not in_database(comment.id):
+ 
+    #If no username is present, use the author of the parent comment
+    if comment.body.lower() == "!identify":
+        parent_comment = r.get_info(thing_id=comment.parent_id)
+        parent = r.get_redditor(parent_comment.author)
+ 
+ #Else use the username provided
+    elif re.search(r'/u/([A-Za-z0-9_-]*)', comment.body):
+        parent = r.get_redditor(re.search(r'/u/([A-Za-z0-9_-]*)', comment.body).group(1))
+ 
+ #Get all of the submissions made by user in question
+    parent_submissions = parent.get_submitted('new', 'all', limit=None)
+    amas_found = []
+    for submission in parent_submissions:
+ #Regex expression finds possible AMA posts, no matter the subreddit.
+    if re.search(r'((?:i am|iam|iama|we are) .* (:?ama|amaa|ask me almost anything|aua|ausa|ask us anything|ask me anything).*)', str(submission.title.encode('utf-8', 'ignore')).lower()):
+ #amas_found will be a list of tuples containing the title, permalink, and number of comments in the AMA in question
+        amas_found.append((submission.title.encode('utf-8', 'ignore'), submission.permalink, submission.num_comments))
+ 
+ #Only if we've actually found any AMAs will we do anything
+    if amas_found:
+        comment_table_header = "Title|Comments\n---|---\n"
+
+ #Build the table for the comment
+        comment_table = comment_table_header
+        for ama in amas_found:
+            title = ama[0]
+            if len(title) &gt; 75:
+                title = title[:72] + "..."
+            link = ama[1]
+            n_comments = ama[2]
+            comments_string = str(n_comments)+" Comments"
+            comments_link = "["+comments_string+"]"+"("+link.encode('utf-8', 'ignore')+")"
+            comment_table = comment_table + title + '|' + comments_link + '\n'
+
+ #Build the body of the comment. Needs prettifying
+        body = "User /u/"+str(parent.name) +" has posted the following AMAs:\n\n" + comment_table + "\n\n^(I'm just a bot made by /u/Molag_balls, If I've gotten something wrong, let him know)"
+ 
+ #We don't want the script to break if we get a rate limit
+        print 'Commenting...'
+        try:
+            comment.reply(body)
+            already_done.append(comment.id)
+        except Exception, e:
+            print e
+            continue
+
+
+    already_done_to_db(already_done)
+    already_done = []
+    print "Sleeping for 5 minutes"
+    time.sleep(180)
+{%endhighlight%}
+</pre>
+<p>The code above is commented, so I won't go through it line by line, but in broad strokes:</p>
+<p>1) The script grabs all the most recent comments in a subreddit, and checks to see if they begin with "!identify", which I have chosen as my "summoning" phrase.</p>
+<p>2) The script checks a MongoDB database to see whether or not we've handled this comment before. If not, it continues.</p>
+<p>3) Then, if the comment starts with "!identify" the script will either: Use the parent comment's author and will check for their AMAs, or if a user is specified, then it will check for their AMAs</p>
+<p>4) If any AMAs are found some sparse information is saved about them (Permalink, title, number of comments) and is formatted into a reddit table.</p>
+<p>5) The bot comments, adds the summoning comment IDs to the Mongo database, and sleeps for 5 minutes (or however long you want).</p>
+<p>The output looks a little something like this:</p>
+<p><img class="aligncenter  wp-image-227" src="{{ site.baseurl }}/assets/Screen-Shot-2015-09-26-at-4.12.42-PM.png" alt="Screen Shot 2015-09-26 at 4.12.42 PM" width="644" height="202" /></p>
+<p>The code is pretty ugly, but it works okay from what I've seen and I did this on a lark, so I'm not terribly concerned. Now I have to figure out how to spread the word about the summoning phrase, so I can set it loose in the wild and see if people actually find it useful and so I can improve it if need be.</p>
+<h2 style="text-align: center;">Next Steps</h2>
+<p>1) Set this up to run continuously on an unused computer in my house, because I'm too cheap and lazy to find and set up a host online.</p>
+<p>2) Make it so it deletes comments with -1 comment karma, so the reddit hivemind won't get angry.</p>
+<p>3) Make more reddit bots because this was fun.</p>
