@@ -5,7 +5,7 @@ permalink: /about/
 ---
 
 
-<img src={{ site.github.url }}/assets/me-in-lab.jpg alt="Me in my natural habitat" style="width: 200px; float:left; margin-right: 25px"/>
+<img src="/assets/me-in-lab.jpg" alt="Me in my natural habitat" style="width: 200px; float:left; margin-right: 25px"/>
 
 Hi there! I'm Luc, and this is my blog. Viewer beware.
 
