@@ -7,7 +7,7 @@ permalink: /projects/
 ## *R*
 [Sentiment Analysis on Twitter](http://rpubs.com/lgendrot/sentiment)
 
-[Does Student Major Choice Depend on Family Income?](http://rpubs.com/lgendrot/student-major-choice)
+[Do Students' Choice of Major Depend on Family Income?](http://rpubs.com/lgendrot/student-major-choice)
 
 Rating 'Tweetworthy' Articles (*ongoing*)
 
