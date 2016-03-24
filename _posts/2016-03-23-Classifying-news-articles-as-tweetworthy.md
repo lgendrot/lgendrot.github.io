@@ -120,11 +120,25 @@ for i in range(len(tweets['Tweet.text'])):
 Great, now I've got the text from ~900 articles that my twitter bot has tweeted out in the last ~6 months (give or take). Switching over to R now I can use the [same functions](http://rpubs.com/lgendrot/sentiment){:target="_blank"} I used for my sentiment analysis. First let's load the data into my R environment:
 
 {%highlight R%}
+library("rmongodb")
+library("dplyr")
+library("randomForest")
+library("dplyr")
+library("plyr")
+library("tm")
+library("class")
+library("e1071")
+library("nnet")
+library("neuralnet")
+library(randomForest)
+library(ranger)
+
 mongo <- mongo.create()
 
 if(mongo.is.connected(mongo) == TRUE) {
   db <- "TweetArticles"
   collection <- paste(db, "ArticleText", sep=".")
+  #Select the fields I want to use
   fields <- mongo.bson.buffer.create()
   mongo.bson.buffer.append(fields, "text", 1L)
   mongo.bson.buffer.append(fields, "tweet_id", 1L)
@@ -135,7 +149,11 @@ if(mongo.is.connected(mongo) == TRUE) {
   mongo.bson.buffer.append(fields, "impressions", 1L)
   mongo.bson.buffer.append(fields, "created_at", 1L)
   fields <- mongo.bson.from.buffer(fields)
+
+  #Get all documents from my collection of tweets
   tweets <- mongo.find.all(mongo, collection, fields=fields)
+
+  #Coerce the resulting list into a data frame
   tweets <- data.frame(matrix(unlist(tweets), nrow=length(tweets), byrow=T), stringsAsFactors = F)
   names(tweets) <- c("url", "text", "created_at", "tweet_id", "impressions", "engagements", "clicks")
   tweets$engagements <- as.numeric(tweets$engagements)
@@ -152,15 +170,20 @@ This gives me a data frame "tweets" whose columns are "url", "text", "created_at
 And from here it's as easy as training the models with some training data and trying it out on some testing data. 
 
 {%highlight R%}
+#Get features as usual
 article_tokens <- tokenize(tweets$text)
 article_features <- get_feature_vectors(article_tokens, corpus_size=5000)
 article_features <- add_targets(article_features, tweets)
 
+#We don't want to use these in the model fitting, so we set them aside
 dependent_names <- names(article_features)[3001:3004]
 
+#Random samples from our features for train and test
 train <- sample_frac(article_features, .80, replace=FALSE)
 test <- setdiff(article_features, train)
 
+#Create a formula, exclusing our dependent variable names
+#Fit our models
 form <- as.formula(paste("engaged_bool~", paste(setdiff(names(train), dependent_names), collapse="+")))
 m_nnet <- nnet(form, data=train, size=10, MaxNWts=100000)
 m_nbayes <- naiveBayes(form, data=train, laplace=1000, threshold=.1)
@@ -168,7 +191,7 @@ m_randomforest <- ranger(form, data=train, write.forest=TRUE)
 m_logit <- glm(form, data=train, family=binomial(link='logit'))
 m_svm <- svm(form, data=train, type="C")
 
-
+#Predict test data using fitted models
 p_nnet <- predict(m_nnet, test, type="class")
 p_bayes <- predict(m_nbayes, test)
 p_rforest <- predict(m_randomforest, test)$predictions
@@ -176,6 +199,7 @@ p_logit <- predict(m_logit, test, type="response")
 p_logit <- ifelse(p_logit > .5, 1, 0)
 p_svm <- predict(m_svm, test)
 
+#Highest vote wins
 p_ensemble <- ensemble(list(p_nnet, p_bayes, p_rforest, p_logit, p_svm))
 sensitivity(table(p_ensemble, test$engaged_bool))
 
