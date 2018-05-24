@@ -212,7 +212,7 @@
         float: left;
     }
 
-    @include media-query($on-palm) {
+    @include media-query(700px) {
         img {
             height: 175px;
             width: 175px;
@@ -280,7 +280,7 @@
         margin-bottom: 50px;
     }
 
-    @include media-query($on-palm) {
+    @include media-query(700px) {
         .duration {
             display: none;
         }
