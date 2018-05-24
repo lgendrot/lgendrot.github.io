@@ -101,8 +101,14 @@ a {
     &:hover {
         color: $link-hover;
     }
+
 }
 
+.home {
+    a {
+        border-bottom: 1px dashed $link-hover;
+    }
+}
 
 
 /**

@@ -175,12 +175,14 @@
 }
 
 .page-heading {
-    font-size: 20px;
+    font-size: 40px;
 }
 
 .post-list {
     margin-left: 0;
     list-style: none;
+
+    margin-top: 50px;
 
     > li {
         margin-bottom: $spacing-unit;
@@ -194,7 +196,99 @@
 
 .post-link {
     display: block;
-    font-size: 28px;
+    font-size: 24px;
+    h4 {
+        margin-bottom: 0;
+    }
+}
+
+#headshot {
+    img {
+        margin-right: 30px;
+        margin-bottom: 10px;
+        border-radius: 50%;
+        height: 250px;
+        width: 250px;
+        float: left;
+    }
+}
+
+
+.resume-section {
+    margin-bottom: 75px;
+
+    .page-heading {
+        margin-bottom: 35px;
+        border-bottom: 2px solid black;
+    }
+
+    ul {
+        columns: 3;
+        -webkit-columns: 3;
+        -moz-columns: 3;
+        width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 50px;
+    }
+
+    .skills {
+        .skills-header {
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+
+            border-bottom: 1px solid gray;
+
+        }
+
+
+    }
+    
+    .job {
+        .job-description {
+            width: 85%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .job-title {
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        img {
+            float: left;
+            border-radius: 50%;
+            height: 40px;
+            width: 40px;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+        margin-bottom: 50px;
+    }
+
+
+    
+    .job-title {
+        position: relative;
+        h2 {
+            margin: 0;
+        }
+        margin-bottom: 15px;
+        border-bottom: 1px solid gray;
+    }
+
+    .duration {
+        position: absolute;
+        right: 0;
+        top: 7.5px;
+        color: darkslategray;
+        text-decoration: none;
+    }
+
+
 }
 
 
@@ -203,7 +297,7 @@
  * Posts
  */
 .post-header {
-    margin-bottom: $spacing-unit;
+    margin-bottom: 10px;
 }
 
 .post-title {

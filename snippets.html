@@ -1,0 +1,19 @@
+---
+layout: page
+title: Snippets
+permalink: /snippets/
+---
+
+<div class="snippets">
+    <p>For code, words, or rants that aren't quite good enough to make it to my blog, 
+        but may yet become something more substantial.</p>
+
+    <ul class="post-list">
+    {% for post in site.posts %}
+        <li>
+            <h4 class="post-link"><a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a></h4>
+        </li>
+    {% endfor %}
+    </ul>
+
+</div>

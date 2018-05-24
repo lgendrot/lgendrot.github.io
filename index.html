@@ -4,16 +4,144 @@ layout: default
 
 <div class="home">
 
-  <h1 class="page-heading">Posts</h1>
 
-  <ul class="post-list">
-    {% for post in site.posts %}
-      <li>
+<div class="resume-section">
+    <h1 class="page-heading">About Me</h1>
 
-        <h2>
-          <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
-        </h2>
-      </li>
-    {% endfor %}
-  </ul>
+    <div id="aboutme">
+      <div id="headshot">
+          <img src="/assets/me-in-lab.jpg" alt="Ancient photo of Luc in his ancestral habitat.">
+      </div>
+      <div id="aboutme-text">
+        <p> Hi there! I'm Luc. I'm a programmer, machine learning nerd, and a big fan of puns. 
+        I have a degree in biology, but--like seemingly everyone my age with a college education--I don't really work in my original field 
+        of study.</p>
+
+        <p> I'm currently a freelance data scientist and python developer.
+        At any given moment I can be found collecting (and sometimes even reading) O'Reilly programming textbooks, cleaning data, 
+        training machine learning models, writing visualization code, or trying to figure out how twitter works.</p>
+
+        <p>I fancy myself an autodidact, which is just a pretentious way of saying I'm a self taught programmer and I don't shy away from working
+        on things I don't already understand. In my (admittedly humble) opinion, being an expert doesn't always mean you know everything, 
+        it just means you know how to learn anything.</p>
+        
+        <p>If you'd like to yell at me about my opinions and why they're wrong, or if you'd like to hire me for a project (or both!) 
+        please feel free to reach out on <a href="https://twitter.com/lgendrot">Twitter.</a></p>
+      
+      </div>
+
+    </div>
+</div>
+
+<div class="resume-section">
+  <h1 class="page-heading">Stuff I Use</h1>
+
+  <div class="skills">
+    <h3 class="skills-header">Programming Languages</h3>
+    <ul>
+        <li>Python</li>
+        <li>R</li>
+        <li>Matlab</li>
+        <li>SQL</li>
+        <li>HTML and CSS</li>
+        <li>(Basic) Javascript</li>
+    </ul>
+  </div>
+  <div class="skills">
+      <h3 class="skills-header">Tools, Frameworks, and Packages</h3>
+      <ul>
+          <li><a href="https://www.docker.com/">Docker & Docker Swarm</a></li>
+          <li> <a href="https://github.com/apache/incubator-airflow">Apache Airflow</a></li>
+          <li> <a href="https://kafka.apache.org/">Apache Kafka</a></li>
+          <li> <a href="http://spark.apache.org/">Apache Spark</a></li>
+          <li> <a href="https://www.tensorflow.org/">Tensorflow</a></li>
+          <li> <a href="http://scikit-learn.org/">Scikitlearn</a></li>
+          <li> <a href="https://pandas.pydata.org/">Pandas & numpy</a></li>
+          <li> <a href="https://matplotlib.org/">matplotlib</a></li>
+      </ul>
+  </div>
+  <div class="skills">
+      <h3 class="skills-header">Databases</h3>
+      <ul>
+          <li><a href="https://aws.amazon.com/redshift/">Redshift</a></li>
+          <li><a href="https://www.postgresql.org/">PostgreSQL</a></li>
+          <li><a href="https://www.mongodb.com/">MongoDB</a></li>
+          <li><a href="https://docs.microsoft.com/en-us/azure/cosmos-db/">Cosmos DB</a></li>
+          <li><a href="https://www.rethinkdb.com/">RethinkDB</a></li>
+      </ul>
+  </div>
+  <div class="skills">
+      <h3 class="skills-header">Other</h3>
+      <ul>
+          <li><a href="https://segment.com/">Segment.io</a></li>
+          <li><a href="https://redash.io/">Redash</a></li>
+          <li><a href="https://www.tableau.com/">Tableau</a></li>
+          <li><a href="https://panoply.io/">Panoply</a></li>
+      </ul>
+  </div>
+
+
+
+</div>
+
+
+
+
+<div class="resume-section">
+  <h1 class="page-heading">Stuff I've Done</h1>
+
+  <div class="job">
+      <div class="job-title"><h2>RankSense</h2> <span class="duration"> October 2017 - May 2018</span></div>
+      <div class="job-description">
+        <p><a href="https://www.ranksense.com">RankSense</a> is an SEO company specializing in data driven insights. RankSense's software
+          allows us to dynamically change SEO related page content (such as meta descriptions and title tags). Over dozens of past clients and
+          millions of lines of data, we use machine learning to determine the best changes to make so your site gets more traffic faster.
+        </p>
+
+        <p>At RankSense I was responsible for a myriad of data science and general development tasks, 
+          from A/B testing, to developing flask APIs, to training convolutional neural nets and visualizing results. 
+          Most of my work was done in Python, but R was also used occasionally for proof of concept work.</p>
+      </div>  
+  </div>
+
+
+  <div class="job">
+    <div class="job-title"><h2>Brook.ai</h2> <span class="duration"> July 2016 - October 2017</span></div>
+    <div class="job-description">
+      <p><a href="http://brook.ai">Brook.ai</a> is a health management startup focused on making Diabetes easier to manage. Brook provides data driven insights into a user's 
+        health data (steps, blood glucose, sleep, etc.) through both automated analyses and one-on-one text-based counseling from 
+        certified Diabetes Educators and Dieticians.
+      </p>
+
+      <p>As the data scientist at Brook.ai, I was responsible for developing and maintaining the entire data pipeline, 
+        from app usage metrics to health data. If there was a question about the data, I was the one to ask.</p>
+    </div>
+  </div>
+
+  <div class="job">
+
+      <div class="job-title"><h2>Princeton Review</h2> <span class="duration"> March 2014 - 2016</span></div>
+      <div class="job-description">
+        <p> As a tutor for <a href="https://www.princetonreview.com">The Princeton Review</a>, I helped to mould the minds of our young ones. 
+          Or I helped them improve their SAT scores, at least.
+        </p>
+      </div>
+      
+  </div>
+
+  <div class="job">
+
+      <div class="job-title"><h2>Proulx Lab (UCSB)</h2> <span class="duration"> October 2013 - September 2014</span></div>
+      <div class="job-description">
+        <p> While I was a lab manager in the <a href="https://labs.eemb.ucsb.edu/proulx/stephen/">Proulx Lab</a> at UCSB I ordered reagents and supplies, 
+          directed undergraduate researchers, and ensured that the lab environment was running smoothly. 
+          And of course I helped the more senior researchers with different ongoing experiments as needed.
+        </p>
+      </div>
+      
+  </div>
+
+
+</div>
+
 </div>
